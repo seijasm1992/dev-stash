@@ -1,0 +1,56 @@
+import "dotenv/config";
+import pg from "pg";
+
+const { Client } = pg;
+
+const connectionString = process.env.DATABASE_URL;
+
+if (!connectionString) {
+  console.error("DATABASE_URL is missing. Add it to .env before testing the database.");
+  process.exit(1);
+}
+
+const client = new Client({
+  connectionString,
+});
+
+try {
+  await client.connect();
+
+  const databaseResult = await client.query(`
+    SELECT
+      current_database() AS database,
+      current_schema() AS schema,
+      now() AS checked_at
+  `);
+
+  const migrationResult = await client.query(`
+    SELECT migration_name, finished_at
+    FROM "_prisma_migrations"
+    ORDER BY finished_at DESC
+    LIMIT 5
+  `);
+
+  const [{ database, schema, checked_at: checkedAt }] = databaseResult.rows;
+
+  console.log("Database connection OK");
+  console.log(`Database: ${database}`);
+  console.log(`Schema: ${schema}`);
+  console.log(`Checked at: ${checkedAt.toISOString()}`);
+
+  if (migrationResult.rows.length === 0) {
+    console.log("No Prisma migrations found.");
+  } else {
+    console.log("Recent Prisma migrations:");
+    for (const migration of migrationResult.rows) {
+      const finishedAt = migration.finished_at?.toISOString() ?? "pending";
+      console.log(`- ${migration.migration_name} (${finishedAt})`);
+    }
+  }
+} catch (error) {
+  console.error("Database test failed.");
+  console.error(error);
+  process.exitCode = 1;
+} finally {
+  await client.end();
+}
