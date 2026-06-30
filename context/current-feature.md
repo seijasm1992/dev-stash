@@ -1,6 +1,6 @@
 ## Current feature
 
-Dashboard UI Phase 1 - initial dashboard shell with shadcn/ui setup, dark mode, a display-only top bar, and placeholder dashboard regions.
+No active feature.
 
 <!--Feature Name and short description-->
 
@@ -13,22 +13,14 @@ Completed
 
 ## Goals
 
-- Initialize shadcn/ui and install the components needed for the dashboard shell.
-- Create a `/dashboard` route.
-- Add the main dashboard layout and any required global styles.
-- Make dark mode the default dashboard experience.
-- Add a top bar with search and a display-only new item button.
-- Add placeholder sidebar and main content areas with `Sidebar` and `Main` headings for phase 1.
+No active goals.
 
 <!--Goals and requeriments-->
 
 
 ## Notes
 
-- Feature spec: `context/features/dashboard-phase-1-spec.md`
-- Visual reference: `context/screenshots/dashboard-ui-main.png`
-- Data reference: `src/lib/mock-data.ts`
-- Later phases are tracked in `context/features/dashboard-phase-2-spec.md` and `context/features/dashboard-phase-3-spec.md`.
+No active notes.
 
 <!--Extra notes-->
 
@@ -40,3 +32,7 @@ Completed
 - 2026-06-25: Added the initial Next.js and Tailwind CSS setup. Cleaned the starter page, kept Tailwind as the only global CSS import, removed default scaffold SVG assets, and committed the baseline as `chore initial next js y tailwind setup`.
 - 2026-06-27: Set the current feature to Dashboard UI Phase 1 and marked it as in progress based on `context/features/dashboard-phase-1-spec.md`.
 - 2026-06-27: Completed Dashboard UI Phase 1 with the `/dashboard` route, shadcn/ui setup, default dark mode, top bar actions, brand placeholder, and sidebar/main placeholders.
+- 2026-06-30: Set the current feature to Dashboard UI Phase 2 and marked it as in progress based on `context/features/dashboard-phase-2-spec.md`.
+- 2026-06-30: Completed Dashboard UI Phase 2 with a data-driven collapsible desktop sidebar, mobile drawer sidebar, item type links, favorite and recent collection sections, and user avatar footer.
+- 2026-06-30: Updated the sidebar so the `Collections` section itself is collapsible, with an accessible expand/collapse control.
+- 2026-06-30: Cleared the active feature details after completing Dashboard UI Phase 2. References: `context/features/dashboard-phase-2-spec.md`, `context/screenshots/dashboard-ui-main.png`, and `src/lib/mock-data.ts`.
