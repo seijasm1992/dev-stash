@@ -378,4 +378,9 @@ User
 
 ---
 
+
+
+### ScreenShoots
+Refers to screenshoots below has base for  the dashboard UI. it no has to be exact use as reference
+
 *Last updated: June 2026*
