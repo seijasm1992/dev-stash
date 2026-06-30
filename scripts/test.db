@@ -31,7 +31,72 @@ try {
     LIMIT 5
   `);
 
+  const systemTypesResult = await client.query(`
+    SELECT name, icon, color
+    FROM "ItemType"
+    WHERE "isSystem" = true
+    ORDER BY name
+  `);
+
+  const demoUserResult = await client.query(`
+    SELECT id, name, email, "isPro", "emailVerified", "createdAt"
+    FROM "User"
+    WHERE email = 'demo@devstash.io'
+    LIMIT 1
+  `);
+
+  if (demoUserResult.rows.length === 0) {
+    throw new Error("Demo user demo@devstash.io was not found. Run `npm run db:seed` first.");
+  }
+
+  const [demoUser] = demoUserResult.rows;
+
+  const collectionsResult = await client.query(
+    `
+      SELECT
+        c.id,
+        c.name,
+        c.description,
+        dt.name AS default_type,
+        COUNT(i.id)::int AS item_count
+      FROM "Collection" c
+      LEFT JOIN "ItemType" dt ON dt.id = c."defaultTypeId"
+      LEFT JOIN "ItemCollection" ic ON ic."collectionId" = c.id
+      LEFT JOIN "Item" i ON i.id = ic."itemId"
+      WHERE c."userId" = $1
+      GROUP BY c.id, dt.name
+      ORDER BY c.name
+    `,
+    [demoUser.id],
+  );
+
+  const itemsResult = await client.query(
+    `
+      SELECT
+        c.name AS collection_name,
+        i.title,
+        it.name AS type,
+        i."contentType",
+        i.language,
+        i.url,
+        i."isPinned",
+        i."isFavorite"
+      FROM "Item" i
+      JOIN "ItemType" it ON it.id = i."itemTypeId"
+      JOIN "ItemCollection" ic ON ic."itemId" = i.id
+      JOIN "Collection" c ON c.id = ic."collectionId"
+      WHERE i."userId" = $1
+      ORDER BY c.name, it.name, i.title
+    `,
+    [demoUser.id],
+  );
+
   const [{ database, schema, checked_at: checkedAt }] = databaseResult.rows;
+  const expected = {
+    systemTypes: 7,
+    collections: 5,
+    items: 18,
+  };
 
   console.log("Database connection OK");
   console.log(`Database: ${database}`);
@@ -47,6 +112,75 @@ try {
       console.log(`- ${migration.migration_name} (${finishedAt})`);
     }
   }
+
+  console.log("");
+  console.log("Demo seed data:");
+  console.log(`User: ${demoUser.name} <${demoUser.email}>`);
+  console.log(`Plan: ${demoUser.isPro ? "Pro" : "Free"}`);
+  console.log(`Email verified: ${demoUser.emailVerified?.toISOString() ?? "no"}`);
+
+  console.log("");
+  console.log(`System item types (${systemTypesResult.rows.length}/${expected.systemTypes}):`);
+  for (const itemType of systemTypesResult.rows) {
+    console.log(`- ${itemType.name}: ${itemType.icon}, ${itemType.color}`);
+  }
+
+  console.log("");
+  console.log(`Collections (${collectionsResult.rows.length}/${expected.collections}):`);
+  for (const collection of collectionsResult.rows) {
+    console.log(`- ${collection.name} [${collection.default_type}] ${collection.item_count} items`);
+    console.log(`  ${collection.description}`);
+
+    const collectionItems = itemsResult.rows.filter(
+      (item) => item.collection_name === collection.name,
+    );
+
+    for (const item of collectionItems) {
+      const metadata = [
+        item.type,
+        item.contentType,
+        item.language,
+        item.isPinned ? "pinned" : null,
+        item.isFavorite ? "favorite" : null,
+      ]
+        .filter(Boolean)
+        .join(", ");
+
+      const target = item.url ? ` -> ${item.url}` : "";
+      console.log(`  - ${item.title} (${metadata})${target}`);
+    }
+  }
+
+  const checks = [
+    {
+      label: "system item types",
+      actual: systemTypesResult.rows.length,
+      expected: expected.systemTypes,
+    },
+    {
+      label: "collections",
+      actual: collectionsResult.rows.length,
+      expected: expected.collections,
+    },
+    {
+      label: "items",
+      actual: itemsResult.rows.length,
+      expected: expected.items,
+    },
+  ];
+
+  const failures = checks.filter((check) => check.actual !== check.expected);
+
+  if (failures.length > 0) {
+    const details = failures
+      .map((failure) => `${failure.label}: expected ${failure.expected}, got ${failure.actual}`)
+      .join("; ");
+
+    throw new Error(`Demo seed data check failed: ${details}`);
+  }
+
+  console.log("");
+  console.log("Demo seed data check OK");
 } catch (error) {
   console.error("Database test failed.");
   console.error(error);
