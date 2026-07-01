@@ -1,8 +1,8 @@
 ## Current feature
 
-Dashboard collections from database.
+Dashboard items from database.
 
-Replace the dummy recent collection cards in the dashboard main area with real collection data from Neon using Prisma. This feature must follow `context/dashboard-collections-spec.md` and preserve the current dashboard card design.
+Replace the dummy pinned and recent item data in the dashboard main area with real item data from Neon using Prisma. This feature must follow `context/dashboard-items-spec.md` and preserve the current dashboard item card design.
 
 <!--Feature Name and short description-->
 
@@ -15,14 +15,15 @@ Completed
 
 ## Goals
 
-- Create `src/lib/db/collections.ts` with Prisma data fetching functions for dashboard collections.
-- Fetch collections directly in a server component instead of reading from `src/lib/mock-data.ts`.
-- Keep the current recent collections card layout and visual design.
-- Show the same recent collections area using real database collections.
-- Derive each collection card border color from the most-used content type in that collection.
-- Show small icons for all item types present in each collection.
-- Update collection stats display using database data.
-- Do not add the items-under-collection UI yet; that will be handled later.
+- Create `src/lib/db/items.ts` with Prisma data fetching functions for dashboard items.
+- Fetch pinned and recent items directly in a server component instead of reading from `src/lib/mock-data.ts`.
+- Keep the current dashboard item card layout and visual design.
+- Show pinned items from the database when they exist.
+- Hide the pinned items section completely when there are no pinned items.
+- Show recent items from the database.
+- Derive each item card icon and border color from the item's `ItemType`.
+- Display item type labels/tags and the same supporting metadata currently shown by the dashboard item cards.
+- Update dashboard stats display using database-backed item data.
 - Verify the dashboard still builds and renders correctly after the data source change.
 
 <!--Goals and requeriments-->
@@ -30,12 +31,13 @@ Completed
 
 ## Notes
 
-- Referenced spec: `context/dashboard-collections-spec.md`.
+- Referenced spec: `context/dashboard-items-spec.md`.
 - Reference screenshot if needed: `context/screenshots/dashboard-ui-main.png`.
-- Keep this feature scoped to dashboard collection cards only.
+- Keep this feature scoped to pinned/recent dashboard item cards only.
 - Use the existing Prisma 7 setup and seeded Neon development data.
-- Preserve current dashboard styling; the main change is replacing mock data with database data.
-- Implementation is complete in `src/lib/db/collections.ts`, `app/dashboard/page.tsx`, and `components/dashboard/dashboard-shell.tsx`. The dashboard route is dynamic so it reads Neon at request time.
+- Preserve current dashboard styling; the main change is replacing mock item data with database item data.
+- The dashboard route is already dynamic and reads Neon at request time.
+- Implementation is complete in `src/lib/db/items.ts`, `app/dashboard/page.tsx`, and `components/dashboard/dashboard-shell.tsx`. Pinned and recent items render from Neon data, and the pinned section is hidden when empty.
 
 <!--Extra notes-->
 
@@ -60,3 +62,5 @@ Completed
 - 2026-06-30: Implemented `prisma/seed.ts`, configured Prisma 7 seeding with `tsx prisma/seed.ts`, added `npm run db:seed`, seeded the Neon development database, and verified 7 system item types, 1 demo user, 5 collections, and 18 items.
 - 2026-06-30: Set the current feature to Dashboard collections from database and marked it as in progress based on `context/dashboard-collections-spec.md`.
 - 2026-06-30: Implemented dashboard collections from Neon with Prisma data fetching, dynamic server rendering for `/dashboard`, real collection stats, dominant type card borders, and collection type icons. Verified lint, build, and browser rendering.
+- 2026-06-30: Set the current feature to Dashboard items from database and marked it as in progress based on `context/dashboard-items-spec.md`.
+- 2026-06-30: Implemented dashboard pinned and recent items from Neon with Prisma data fetching, item type card styling, item metadata tags, and conditional pinned section rendering. Verified lint, build, and browser rendering.

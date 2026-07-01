@@ -4,8 +4,10 @@ import Link from "next/link";
 import { type ReactNode, useState } from "react";
 import {
   Boxes,
+  CalendarClock,
   Code2,
   ChevronDown,
+  Clock3,
   File,
   Folder,
   FolderPlus,
@@ -16,6 +18,7 @@ import {
   Menu,
   MoreHorizontal,
   PanelLeft,
+  Pin,
   Plus,
   Search,
   Settings,
@@ -35,10 +38,13 @@ import type {
   DashboardItemType,
   DashboardUser,
 } from "@/src/lib/db/collections";
+import type { DashboardItem } from "@/src/lib/db/items";
 
 interface DashboardShellProps {
   collections: DashboardCollection[];
   itemTypes: DashboardItemType[];
+  pinnedItems: DashboardItem[];
+  recentItems: DashboardItem[];
   stats: DashboardCollectionStats;
   user: DashboardUser;
 }
@@ -73,6 +79,16 @@ const typeSurfaceClassMap: Record<string, string> = {
   snippet: "border-l-blue-400/90 bg-blue-400/5",
 };
 
+const typeIconSurfaceClassMap: Record<string, string> = {
+  command: "bg-orange-400/10",
+  file: "bg-slate-400/10",
+  image: "bg-pink-400/10",
+  link: "bg-emerald-400/10",
+  note: "bg-yellow-300/10",
+  prompt: "bg-violet-400/10",
+  snippet: "bg-blue-400/10",
+};
+
 function getItemsHref(itemType: DashboardItemType) {
   return `/items/${itemType.pluralName.toLowerCase()}`;
 }
@@ -88,6 +104,23 @@ function getInitials(name: string) {
     .join("")
     .slice(0, 2)
     .toUpperCase();
+}
+
+function formatShortDate(date: string | null) {
+  if (!date) {
+    return "No activity";
+  }
+
+  return new Intl.DateTimeFormat("en", {
+    day: "numeric",
+    month: "short",
+  }).format(new Date(`${date}T00:00:00`));
+}
+
+function renderTypeIcon(itemType: DashboardItemType, className: string) {
+  const Icon = getTypeIcon(itemType);
+
+  return <Icon className={className} />;
 }
 
 function getCollectionType(
@@ -116,6 +149,8 @@ function getCollectionType(
 export function DashboardShell({
   collections,
   itemTypes,
+  pinnedItems,
+  recentItems,
   stats,
   user,
 }: DashboardShellProps) {
@@ -304,10 +339,143 @@ export function DashboardShell({
                 />
               ))}
             </div>
+
+            <div className="mt-10 space-y-8">
+              {pinnedItems.length > 0 ? (
+                <DashboardSection
+                  icon={<Pin className="size-5" />}
+                  title="Pinned Items"
+                >
+                  <ItemList items={pinnedItems} />
+                </DashboardSection>
+              ) : null}
+
+              <DashboardSection
+                icon={<Clock3 className="size-5" />}
+                title="Recent Items"
+              >
+                <ItemList items={recentItems} />
+              </DashboardSection>
+            </div>
           </section>
         </div>
       </div>
     </main>
+  );
+}
+
+interface DashboardSectionProps {
+  children: ReactNode;
+  icon: ReactNode;
+  title: string;
+}
+
+function DashboardSection({ children, icon, title }: DashboardSectionProps) {
+  return (
+    <section className="space-y-4">
+      <div className="flex items-center gap-3 text-muted-foreground">
+        {icon}
+        <h2 className="text-xl font-semibold tracking-tight text-foreground">
+          {title}
+        </h2>
+      </div>
+      {children}
+    </section>
+  );
+}
+
+interface ItemListProps {
+  items: DashboardItem[];
+}
+
+function ItemList({ items }: ItemListProps) {
+  if (items.length === 0) {
+    return (
+      <div className="rounded-lg border border-dashed border-border bg-card/50 p-6 text-sm text-muted-foreground">
+        Nothing here yet.
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {items.map((item) => (
+        <ItemRow item={item} key={item.id} />
+      ))}
+    </div>
+  );
+}
+
+interface ItemRowProps {
+  item: DashboardItem;
+}
+
+function ItemRow({ item }: ItemRowProps) {
+  const typeSlug = item.itemType.slug;
+  const metadata = [
+    item.itemType.name,
+    item.contentType,
+    item.language,
+  ].filter(Boolean);
+
+  return (
+    <Link
+      className={cn(
+        "grid gap-4 rounded-lg border border-border border-l-4 bg-card p-5 transition hover:border-foreground/20 hover:bg-accent/25 md:grid-cols-[1fr_auto]",
+        typeSurfaceClassMap[typeSlug],
+      )}
+      href={getItemsHref(item.itemType)}
+    >
+      <div className="flex min-w-0 gap-4">
+        <div
+          className={cn(
+            "flex size-12 shrink-0 items-center justify-center rounded-lg",
+            typeIconSurfaceClassMap[typeSlug],
+          )}
+        >
+          {renderTypeIcon(
+            item.itemType,
+            cn("size-5", typeColorClassMap[typeSlug]),
+          )}
+        </div>
+        <div className="min-w-0">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <h3 className="truncate text-base font-semibold">{item.title}</h3>
+            {item.isPinned ? (
+              <Pin className="size-4 shrink-0 fill-muted-foreground text-muted-foreground" />
+            ) : null}
+            {item.isFavorite ? (
+              <Star className="size-4 shrink-0 fill-yellow-400 text-yellow-400" />
+            ) : null}
+          </div>
+          <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+            {item.description}
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {metadata.map((tag) => (
+              <span
+                className="rounded-lg bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground"
+                key={tag}
+              >
+                {tag}
+              </span>
+            ))}
+            {item.tags.map((tag) => (
+              <span
+                className="rounded-lg bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground"
+                key={tag}
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className="flex items-center gap-2 text-sm text-muted-foreground md:justify-end">
+        <CalendarClock className="size-4" />
+        <span>{formatShortDate(item.lastUsedAt ?? item.updatedAt)}</span>
+      </div>
+    </Link>
   );
 }
 
