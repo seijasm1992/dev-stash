@@ -147,10 +147,10 @@ function getCollectionType(
 }
 
 export function DashboardShell({
-  collections,
-  itemTypes,
-  pinnedItems,
-  recentItems,
+  collections = [],
+  itemTypes = [],
+  pinnedItems = [],
+  recentItems = [],
   stats,
   user,
 }: DashboardShellProps) {
@@ -179,22 +179,22 @@ export function DashboardShell({
     {
       icon: Boxes,
       label: "Items",
-      value: stats.totalItems,
+      value: stats?.totalItems ?? 0,
     },
     {
       icon: Folder,
       label: "Collections",
-      value: stats.totalCollections,
+      value: stats?.totalCollections ?? 0,
     },
     {
       icon: Heart,
       label: "Favorite Items",
-      value: stats.favoriteItems,
+      value: stats?.favoriteItems ?? 0,
     },
     {
       icon: Star,
       label: "Favorite Collections",
-      value: stats.favoriteCollections,
+      value: stats?.favoriteCollections ?? 0,
     },
   ];
 

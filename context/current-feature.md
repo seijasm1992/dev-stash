@@ -1,29 +1,30 @@
 ## Current feature
 
-Dashboard items from database.
+Stats and sidebar from database.
 
-Replace the dummy pinned and recent item data in the dashboard main area with real item data from Neon using Prisma. This feature must follow `context/dashboard-items-spec.md` and preserve the current dashboard item card design.
+Replace the remaining mock-backed dashboard stats and sidebar data with real Neon data using Prisma. This feature must follow `context/stats-sidebar-spec.md` and preserve the current dashboard/sidebar design.
 
 <!--Feature Name and short description-->
 
 ## Status
 
-Completed
+In Progress
 
 <!--Not Started  | In Progress | Completed-->
 
 
 ## Goals
 
-- Create `src/lib/db/items.ts` with Prisma data fetching functions for dashboard items.
-- Fetch pinned and recent items directly in a server component instead of reading from `src/lib/mock-data.ts`.
-- Keep the current dashboard item card layout and visual design.
-- Show pinned items from the database when they exist.
-- Hide the pinned items section completely when there are no pinned items.
-- Show recent items from the database.
-- Derive each item card icon and border color from the item's `ItemType`.
-- Display item type labels/tags and the same supporting metadata currently shown by the dashboard item cards.
-- Update dashboard stats display using database-backed item data.
+- Display dashboard stats from database data while keeping the current design/layout.
+- Display system item types in the sidebar from the database with their icons.
+- Link sidebar item types to `/items/[typename]`.
+- Display actual collection data in the sidebar from the database.
+- Add a "View all collections" link under the sidebar collections list that goes to `/collections`.
+- Keep star icons for favorite collections.
+- For recent collections, show a colored circle based on the most-used item type in that collection.
+- Create or update `src/lib/db/items.ts` with database functions as needed.
+- Use `src/lib/db/collections.ts` as the reference pattern for collection-related data fetching.
+- Remove the relevant remaining sidebar/stats dependency on `src/lib/mock-data.ts`.
 - Verify the dashboard still builds and renders correctly after the data source change.
 
 <!--Goals and requeriments-->
@@ -31,13 +32,11 @@ Completed
 
 ## Notes
 
-- Referenced spec: `context/dashboard-items-spec.md`.
-- Reference screenshot if needed: `context/screenshots/dashboard-ui-main.png`.
-- Keep this feature scoped to pinned/recent dashboard item cards only.
+- Referenced spec: `context/stats-sidebar-spec.md`.
+- Reference implementation: `src/lib/db/collections.ts`.
 - Use the existing Prisma 7 setup and seeded Neon development data.
-- Preserve current dashboard styling; the main change is replacing mock item data with database item data.
-- The dashboard route is already dynamic and reads Neon at request time.
-- Implementation is complete in `src/lib/db/items.ts`, `app/dashboard/page.tsx`, and `components/dashboard/dashboard-shell.tsx`. Pinned and recent items render from Neon data, and the pinned section is hidden when empty.
+- Preserve current dashboard and sidebar styling; the main change is replacing mock stats/sidebar data with database data.
+- Keep this feature scoped to dashboard stats and sidebar item type/collection data.
 
 <!--Extra notes-->
 
@@ -64,3 +63,4 @@ Completed
 - 2026-06-30: Implemented dashboard collections from Neon with Prisma data fetching, dynamic server rendering for `/dashboard`, real collection stats, dominant type card borders, and collection type icons. Verified lint, build, and browser rendering.
 - 2026-06-30: Set the current feature to Dashboard items from database and marked it as in progress based on `context/dashboard-items-spec.md`.
 - 2026-06-30: Implemented dashboard pinned and recent items from Neon with Prisma data fetching, item type card styling, item metadata tags, and conditional pinned section rendering. Verified lint, build, and browser rendering.
+- 2026-07-01: Set the current feature to Stats and sidebar from database and marked it as in progress based on `context/stats-sidebar-spec.md`.
