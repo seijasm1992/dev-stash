@@ -46,7 +46,7 @@ export default async function DashboardPage() {
       getDashboardItemsData(),
     ]);
   } catch (error) {
-    console.error("[dashboard] Failed to load dashboard data:", getErrorMessage(error));
+    console.warn("[dashboard] Failed to load dashboard data:", getErrorMessage(error));
   }
 
   return (
