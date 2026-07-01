@@ -3,15 +3,18 @@
 import Link from "next/link";
 import { type ReactNode, useState } from "react";
 import {
+  Boxes,
   Code2,
   ChevronDown,
   File,
   Folder,
   FolderPlus,
+  Heart,
   ImageIcon,
   Layers3,
   LinkIcon,
   Menu,
+  MoreHorizontal,
   PanelLeft,
   Plus,
   Search,
@@ -26,12 +29,18 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import type { MockCollection, MockItemType, MockUser } from "@/src/lib/mock-data";
+import type {
+  DashboardCollection,
+  DashboardCollectionStats,
+  DashboardItemType,
+  DashboardUser,
+} from "@/src/lib/db/collections";
 
 interface DashboardShellProps {
-  collections: MockCollection[];
-  itemTypes: MockItemType[];
-  user: MockUser;
+  collections: DashboardCollection[];
+  itemTypes: DashboardItemType[];
+  stats: DashboardCollectionStats;
+  user: DashboardUser;
 }
 
 const typeIconMap = {
@@ -54,11 +63,21 @@ const typeColorClassMap: Record<string, string> = {
   snippet: "text-blue-400",
 };
 
-function getItemsHref(itemType: MockItemType) {
+const typeSurfaceClassMap: Record<string, string> = {
+  command: "border-l-orange-400/90 bg-orange-400/5",
+  file: "border-l-slate-400/90 bg-slate-400/5",
+  image: "border-l-pink-400/90 bg-pink-400/5",
+  link: "border-l-emerald-400/90 bg-emerald-400/5",
+  note: "border-l-yellow-300/90 bg-yellow-300/5",
+  prompt: "border-l-violet-400/90 bg-violet-400/5",
+  snippet: "border-l-blue-400/90 bg-blue-400/5",
+};
+
+function getItemsHref(itemType: DashboardItemType) {
   return `/items/${itemType.pluralName.toLowerCase()}`;
 }
 
-function getTypeIcon(itemType: MockItemType) {
+function getTypeIcon(itemType: DashboardItemType) {
   return typeIconMap[itemType.icon as keyof typeof typeIconMap] ?? File;
 }
 
@@ -71,9 +90,33 @@ function getInitials(name: string) {
     .toUpperCase();
 }
 
+function getCollectionType(
+  collection: DashboardCollection,
+  itemTypeById: Map<string, DashboardItemType>,
+) {
+  if (collection.dominantTypeId) {
+    const dominantType = itemTypeById.get(collection.dominantTypeId);
+
+    if (dominantType) {
+      return dominantType;
+    }
+  }
+
+  if (collection.defaultTypeId) {
+    const defaultType = itemTypeById.get(collection.defaultTypeId);
+
+    if (defaultType) {
+      return defaultType;
+    }
+  }
+
+  return itemTypeById.get(collection.itemTypeIds[0]);
+}
+
 export function DashboardShell({
   collections,
   itemTypes,
+  stats,
   user,
 }: DashboardShellProps) {
   const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(false);
@@ -88,6 +131,37 @@ export function DashboardShell({
     )
     .filter((collection) => !collection.isFavorite)
     .slice(0, 4);
+  const itemTypeById = new Map(
+    itemTypes.map((itemType) => [itemType.id, itemType]),
+  );
+  const dashboardCollections = [...collections]
+    .sort(
+      (first, second) =>
+        new Date(second.updatedAt).getTime() - new Date(first.updatedAt).getTime(),
+    )
+    .slice(0, 6);
+  const summaryStats = [
+    {
+      icon: Boxes,
+      label: "Items",
+      value: stats.totalItems,
+    },
+    {
+      icon: Folder,
+      label: "Collections",
+      value: stats.totalCollections,
+    },
+    {
+      icon: Heart,
+      label: "Favorite Items",
+      value: stats.favoriteItems,
+    },
+    {
+      icon: Star,
+      label: "Favorite Collections",
+      value: stats.favoriteCollections,
+    },
+  ];
 
   return (
     <main className="min-h-screen overflow-hidden bg-background text-foreground">
@@ -181,7 +255,7 @@ export function DashboardShell({
             </div>
           </header>
 
-          <section className="p-6 md:p-8">
+          <section className="min-w-0 overflow-y-auto p-4 md:p-8">
             <div className="space-y-2">
               <h1 className="text-3xl font-semibold tracking-tight">Dashboard</h1>
               <p className="text-muted-foreground">
@@ -189,8 +263,46 @@ export function DashboardShell({
               </p>
             </div>
 
-            <div className="mt-10 rounded-lg border border-dashed border-border bg-card/40 p-8">
-              <h2 className="text-2xl font-semibold tracking-tight">Main</h2>
+            <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              {summaryStats.map((stat) => {
+                const Icon = stat.icon;
+
+                return (
+                  <div
+                    className="rounded-lg border border-border bg-card p-5"
+                    key={stat.label}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-sm font-medium text-muted-foreground">
+                        {stat.label}
+                      </p>
+                      <Icon className="size-4 text-muted-foreground" />
+                    </div>
+                    <p className="mt-3 font-mono text-3xl font-semibold tracking-normal">
+                      {stat.value}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="mt-10 flex items-center justify-between gap-4">
+              <h2 className="text-2xl font-semibold tracking-tight">
+                Collections
+              </h2>
+              <Button type="button" variant="ghost">
+                View all
+              </Button>
+            </div>
+
+            <div className="mt-5 grid gap-4 xl:grid-cols-2 2xl:grid-cols-3">
+              {dashboardCollections.map((collection) => (
+                <CollectionCard
+                  collection={collection}
+                  itemTypeById={itemTypeById}
+                  key={collection.id}
+                />
+              ))}
             </div>
           </section>
         </div>
@@ -199,13 +311,71 @@ export function DashboardShell({
   );
 }
 
+interface CollectionCardProps {
+  collection: DashboardCollection;
+  itemTypeById: Map<string, DashboardItemType>;
+}
+
+function CollectionCard({ collection, itemTypeById }: CollectionCardProps) {
+  const primaryType = getCollectionType(collection, itemTypeById);
+  const surfaceClass = primaryType
+    ? typeSurfaceClassMap[primaryType.slug]
+    : "border-l-border";
+
+  return (
+    <Link
+      className={cn(
+        "group min-h-52 rounded-lg border border-border border-l-4 bg-card p-6 transition hover:border-foreground/20 hover:bg-accent/25",
+        surfaceClass,
+      )}
+      href={`/collections/${collection.id}`}
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <div className="flex min-w-0 items-center gap-2">
+            <h3 className="truncate text-lg font-semibold">{collection.name}</h3>
+            {collection.isFavorite ? (
+              <Star className="size-4 shrink-0 fill-yellow-400 text-yellow-400" />
+            ) : null}
+          </div>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {collection.itemCount} items
+          </p>
+        </div>
+        <MoreHorizontal className="size-5 shrink-0 text-muted-foreground opacity-70 transition group-hover:opacity-100" />
+      </div>
+      <p className="mt-5 line-clamp-2 text-sm text-muted-foreground">
+        {collection.description}
+      </p>
+      <div className="mt-6 flex flex-wrap gap-2">
+        {collection.itemTypeIds.map((itemTypeId) => {
+          const itemType = itemTypeById.get(itemTypeId);
+
+          if (!itemType) {
+            return null;
+          }
+
+          const Icon = getTypeIcon(itemType);
+
+          return (
+            <Icon
+              className={cn("size-4", typeColorClassMap[itemType.slug])}
+              key={itemType.id}
+            />
+          );
+        })}
+      </div>
+    </Link>
+  );
+}
+
 interface DashboardSidebarProps {
-  collections: MockCollection[];
-  favoriteCollections: MockCollection[];
+  collections: DashboardCollection[];
+  favoriteCollections: DashboardCollection[];
   isCollapsed?: boolean;
-  itemTypes: MockItemType[];
+  itemTypes: DashboardItemType[];
   onClose?: () => void;
-  user: MockUser;
+  user: DashboardUser;
 }
 
 function DashboardSidebar({
@@ -388,7 +558,7 @@ function SidebarSection({ children, isCollapsed, title }: SidebarSectionProps) {
 }
 
 interface CollectionGroupProps {
-  collections: MockCollection[];
+  collections: DashboardCollection[];
   isCollapsed: boolean;
   title: string;
   withStar?: boolean;

@@ -1,12 +1,20 @@
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
-import { collections, currentUser, itemTypes } from "@/src/lib/mock-data";
+import { getDashboardCollectionsData } from "@/src/lib/db/collections";
+import { connection } from "next/server";
 
-export default function DashboardPage() {
+export const dynamic = "force-dynamic";
+
+export default async function DashboardPage() {
+  await connection();
+
+  const dashboardData = await getDashboardCollectionsData();
+
   return (
     <DashboardShell
-      collections={collections}
-      itemTypes={itemTypes}
-      user={currentUser}
+      collections={dashboardData.collections}
+      itemTypes={dashboardData.itemTypes}
+      stats={dashboardData.stats}
+      user={dashboardData.user}
     />
   );
 }

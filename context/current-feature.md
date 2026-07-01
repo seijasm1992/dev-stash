@@ -1,8 +1,8 @@
 ## Current feature
 
-Seed development data.
+Dashboard collections from database.
 
-Create a Prisma seed script for development and demo data. This feature must follow `context/seed-spec.md`, the existing Prisma 7 setup, and the data models in `prisma/schema.prisma`.
+Replace the dummy recent collection cards in the dashboard main area with real collection data from Neon using Prisma. This feature must follow `context/dashboard-collections-spec.md` and preserve the current dashboard card design.
 
 <!--Feature Name and short description-->
 
@@ -15,27 +15,27 @@ Completed
 
 ## Goals
 
-- Create or overwrite the current seed file as `prisma/seed.ts`.
-- Load environment variables with `dotenv` before connecting to the database.
-- Seed demo user `demo@devstash.io` with name `Demo User`, password `12345678` hashed with `bcryptjs` using 12 rounds, `isPro: false`, and `emailVerified` set to the current date.
-- Seed all system item types from `context/seed-spec.md` with Lucide icon names, colors, and `isSystem: true`.
-- Seed the required collections: React Patterns, AI Workflows, DevOps, Terminal Commands, and Design Resources.
-- Seed the required snippets, prompts, commands, and real documentation/resource links for each collection.
-- Make the seed script safe to rerun by using deterministic lookups/upserts where practical.
-- Add an npm script for running the seed if one does not already exist.
-- Verify the seed against the Neon development database after implementation.
+- Create `src/lib/db/collections.ts` with Prisma data fetching functions for dashboard collections.
+- Fetch collections directly in a server component instead of reading from `src/lib/mock-data.ts`.
+- Keep the current recent collections card layout and visual design.
+- Show the same recent collections area using real database collections.
+- Derive each collection card border color from the most-used content type in that collection.
+- Show small icons for all item types present in each collection.
+- Update collection stats display using database data.
+- Do not add the items-under-collection UI yet; that will be handled later.
+- Verify the dashboard still builds and renders correctly after the data source change.
 
 <!--Goals and requeriments-->
 
 
 ## Notes
 
-- Referenced spec: `context/seed-spec.md`.
-- The seed can overwrite any existing seed file content.
-- Keep this feature scoped to seed data and seed execution only; do not add unrelated app UI.
-- Prisma 7 is already configured. Use the generated client/adapter pattern already present in the project.
-- The seed should target development/demo data only.
-- Seed implementation is complete in `prisma/seed.ts`. It runs with `npm run db:seed` and was verified against the Neon development database.
+- Referenced spec: `context/dashboard-collections-spec.md`.
+- Reference screenshot if needed: `context/screenshots/dashboard-ui-main.png`.
+- Keep this feature scoped to dashboard collection cards only.
+- Use the existing Prisma 7 setup and seeded Neon development data.
+- Preserve current dashboard styling; the main change is replacing mock data with database data.
+- Implementation is complete in `src/lib/db/collections.ts`, `app/dashboard/page.tsx`, and `components/dashboard/dashboard-shell.tsx`. The dashboard route is dynamic so it reads Neon at request time.
 
 <!--Extra notes-->
 
@@ -58,3 +58,5 @@ Completed
 - 2026-06-30: Applied the initial Prisma migration to the Neon development database with `prisma migrate dev --name init_devstash`, verified `prisma migrate status` reports the database schema is up to date, and marked the feature as completed.
 - 2026-06-30: Set the current feature to Seed development data and marked it as in progress based on `context/seed-spec.md`.
 - 2026-06-30: Implemented `prisma/seed.ts`, configured Prisma 7 seeding with `tsx prisma/seed.ts`, added `npm run db:seed`, seeded the Neon development database, and verified 7 system item types, 1 demo user, 5 collections, and 18 items.
+- 2026-06-30: Set the current feature to Dashboard collections from database and marked it as in progress based on `context/dashboard-collections-spec.md`.
+- 2026-06-30: Implemented dashboard collections from Neon with Prisma data fetching, dynamic server rendering for `/dashboard`, real collection stats, dominant type card borders, and collection type icons. Verified lint, build, and browser rendering.
