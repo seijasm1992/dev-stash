@@ -30,6 +30,10 @@ const emptyItemsData: DashboardItemsData = {
   recentItems: [],
 };
 
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : String(error);
+}
+
 export default async function DashboardPage() {
   await connection();
 
@@ -42,7 +46,7 @@ export default async function DashboardPage() {
       getDashboardItemsData(),
     ]);
   } catch (error) {
-    console.error("[dashboard] Failed to load dashboard data", error);
+    console.error("[dashboard] Failed to load dashboard data:", getErrorMessage(error));
   }
 
   return (
